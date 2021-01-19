@@ -6,7 +6,7 @@ import SignInSignOut from './pages/sign-in-signup/sign-in-signup.component'
 import { Route, Switch } from "react-router-dom";
 
 import "./App.css";
-import { auth } from "./firebase/firebase.util";
+import { auth, createUserProfileDocument } from "./firebase/firebase.util";
 
 class App extends React.Component {
 
@@ -20,9 +20,21 @@ class App extends React.Component {
   unSubscribeFromAuth = null;
 
   componentDidMount() {
-    this.unSubscribeFromAuth = auth.onAuthStateChanged(user => {
-      this.setState({currentUser: user})
-      console.log(user)
+    this.unSubscribeFromAuth = auth.onAuthStateChanged(async userAuth => {
+      if (userAuth) {
+        const userRef = createUserProfileDocument(userAuth);
+        (await userRef).onSnapshot(snapshot => {
+          this.setState({
+            currentUser: {
+              id: snapshot.id,
+              ...snapshot.data()
+            }
+          });
+        });
+      }
+      
+       this.setState({currentUser: userAuth})
+      // console.log(user)
     })
   }
 
